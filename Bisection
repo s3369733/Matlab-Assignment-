@@ -1,0 +1,60 @@
+function [x_list,y_list] = Bisection(fun, a, b, maxiter, tolerance)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bisection
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function uses the bisection method to find the root of an input function, fun.
+
+% Inputs:
+    % fun:          Function of which to find roots (i.e. where f(inputs) = 0)
+    % a:            Initial lower limit for bisection method
+    % b:            Initial upper limit for bisection method
+    % maxiter:      Maximum number of iterations the bisection can run
+    % tolerance:    Convergence tolerance of bisection
+    
+% Outputs:
+    % x_list:       x-coordinate ("s") of each point along the process (not just the final one).
+    % y_list:       y-coordinate ("fun(s)") of each point along the process (not just the final one).
+
+%% Check inputs 
+% Do a and b bracket a root and are not themselves roots?
+
+while ((fun(a)*fun(b))>0)
+    fprintf('\n Invalid selection of a and b. Please try again. \n\n');
+end
+
+% Are maxiter and tolerance positive?
+
+while (maxiter<0)
+    fprintf('Invalid selection for maximum number of intervals, please enter a positive value');
+end
+
+while (tolerance<0)
+    fprintf('Invalid selection for tolerance, please enter a positive value'); 
+
+
+%% Main bisection algorithm loop
+
+s=(a+b)/2
+n=1;
+while abs(b-a)>tolerance
+    if (fun(a)*fun(b)<0)
+        b=s;
+    else 
+        a=s;
+    end
+    
+n=n+1;
+s=(a+b)/2;
+end
+
+
+        
+
+
+
+
+
+
+
+
