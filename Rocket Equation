@@ -1,0 +1,25 @@
+function Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Rocket_Eqn
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Using the Tsiolkovsky rocket equation, calculate the change in fuel mass
+% required to perform a manoeuvre with a certain change in velocity.
+
+% Inputs:
+    % m_f:	Final mass after manoeuvre (kg)
+    % Delta_V:	Change in velocity of manoeuvre (m/s)
+    % I_sp:	Specific impulse (s)
+ 
+% Outputs:
+    % Delta_m:	Change in mass (kg) (i.e. mass of fuel burned for manoeuvre)
+
+% Constants:
+g = 9.81; % Earth Surface Gravity in m/s^2 (used as constant for calculating I_sp);
+
+%% Calculate change in fuel mass for this manoevre
+
+m_r = m_f*(1-exp(-(Delta_V/I_sp*g)));
+
+
+end
