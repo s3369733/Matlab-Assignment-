@@ -1,0 +1,45 @@
+function [Delta_V,V_final] = Manoeuvre(V_0, R_0, R_f,M,Phase,plot_or_not)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Manoeuvre
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Calculate the change in velocity required to complete an orbital transfer using a Hohmann transfer,
+% and the resulting velocity at the opposite side of the new orbit.
+% Then, if plot_or_not==1, polar plot the shape of the transfer orbit along with the initial and final radii.
+
+% Inputs:
+    % V_0:      Initial velocity
+    % R_0:      Initial transfer orbit radius
+    % R_f:      Final transfer orbit radius
+    % M:	 	Mass of central planetary body
+    % Phase: 	Name of the mission phase when the manoeuvre occurs (for plot title)
+    % plot_or_not:	Logical 1/0 to enable/disable the orbit polar-plot
+          
+% Outputs:
+    % Delta_V:  Change in velocity required to complete manoeuvre
+    % V_final:  Velocity at the opposite side of the orbit resulting from the manoeuvre 
+                % Plot of the orbit transfer in a new figure window
+
+% Constants:
+G = 6.67e-11; % Universal Gravitational Constant
+
+%% Perform Delta V Calculations
+a = (R_0+R_f)/2; % Average orbit radius
+period = sqrt(4*pi^2*a^3/(G*M)); %Period of transfer orbit
+V_initial = 2*pi*a*sqrt(2*a/R_0-1)/period; % Initial transfer velocity
+Delta_V = V_0 - V_initial; % between initial velocity and tranfer velocity. Not sure if this is right??????????????????
+%?????????????????????????????????????
+V_final = 2*pi*a*sqrt(2*a/R_f-1)/period; % Final transfer velocity
+
+%% Plot initial orbit and the Moon's surface
+if plot_or_not == 1
+    Fig
+    theta = linspace(0,2*pi,100);
+    polarplot(theta,R_0,theta,R_f)
+    hold on
+%% Define and plot transfer orbit
+    
+    
+
+
+end
