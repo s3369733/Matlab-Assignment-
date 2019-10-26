@@ -20,7 +20,7 @@ Filename = 'S3562932_S3369733_Design_File';
 %% Material Properties
 rho  = 2810;           % Element Material Density (kg/m^3)
 E    = 7.17E+10;           % Element Material Young's Modulus (N/m^2)
-failure_strength = ; % Element Material Yield/Ultimate/Failure Strength (N/m^2)
+failure_strength = 5.70e+8; % Element Material Yield/Ultimate/Failure Strength (N/m^2)
 
 %% Parameters
 Amin = 0.001; % Minimum cross-sectional area to test (m^2)
@@ -29,15 +29,17 @@ nA = 10; % number of cross-sectional areas to check
 n = 8; % Order of polynomial to fit to coarse data
 safety_factor = 2; % Factor by which to divide yield strength to have maximum allowable stress
 stress_allowed = failure_strength / safety_factor;
-tolerance = ; % Convergence tolerance for bisection method, in units of stress (Pa)
-maxiter = ;    % Maximum number of iterations for bisection method
+tolerance = 1e+6; % Convergence tolerance for bisection method, in units of stress (Pa)
+maxiter = 100;    % Maximum number of iterations for bisection method
 
 %% Activity 1 & 2: Call RunAnalysis for some input Area to test it and draw your truss structure
 % (set plot_or_not to 1 to see your truss model and debug, via RunAnalysis calling DrawModel)
+A = 0.002; % This shouldn't be here
 
-plot_or_not == 1;
-[peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not)
-plot_or_not == 0; 
+plot_or_not = 1;
+
+[peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not);
+plot_or_not = 0; 
 
 % (set plot_or_not to 0 before you submit)
 
@@ -47,8 +49,8 @@ plot_or_not == 0;
 
 % For each Cross-Sectional Area, call RunAnalysis
 
-for A = linspace(Amin,Amax
-    [peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not)
+for A = linspace(Amin,Amax,nA)
+    [peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not);
     figure 
     hold on
     plot(A, peak_stress, 'b')
@@ -75,7 +77,7 @@ end
 
 for i=1:1:count
     if abs (poly(1)) > tolerance
-        poly = polyfit(A,peak_stress,i)
+        poly = polyfit(A,peak_stress,i);
         interp_x2=polyval(poly,x2);
         plot(i, interp_x2, 'bo')
         figure
@@ -88,7 +90,7 @@ end
 %% Activity 5: Use bisection method to find root of a function g = polyval() - stress_allowed
 % Define function g whose root is the intersection of peak stress and max allowable stress 
 
-fun = @(g) 
+fun = @(g) 1; % !!! this needs changing_________!!!
 % Calculate initial lower limit for bisection (largest area with peak stress > allowable stress)
 
 % Plot vertical line at initial lower limit
@@ -97,7 +99,7 @@ fun = @(g)
 
 % Call Bisection function to perform bisection method on g, getting list of (x,y) points at each iteration of the process
 
-[x_list,y_list] = Bisection(fun, a, b, maxiter, tolerance)
+[x_list,y_list] = Bisection(fun, a, b, maxiter, tolerance);
 
 % Plot optimal point found by bisection (x = A_opt, y = peak stress at A_opt according to fitted polynomial)
 
@@ -106,4 +108,3 @@ fun = @(g)
 % Plot this exact optimal point as a green x on descent module fuel mass vs area plot (figure 2)
 
 % Plot this exact optimal point as a green x on bisection stress vs area plot (figure 3)
-
