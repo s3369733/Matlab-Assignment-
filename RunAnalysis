@@ -56,18 +56,26 @@ n_des_fuel = xlsread(Filename,2,[ 'L3:L',num2str(2+Nn) ])'; % Nodes of point mas
 
 %% Create lists of element properties from constant input properties (required for inputs to DrawModel & RunFEA)
 % List of each element's Young's Modulus, "Es" from "E"
+Es = linspace(E,E,8);
 % List of each element's cross-sectional area, "As" from "A"
+As = linspace(E,E,8);
 % List of each element's input density, "rhos" from "rho"
+rhos = linspace(E,E,8);
 
 %% Draw model of descent stage with no fuel (only if plot_or_not==1)
 % (no fuel and no dry point masses so "point_ms" input is an array of zeros)
 
+if plot_or_not==1
+    DrawModel(n_xyz, e_n, As, point_ms,Ne, Nn, Title)
+end
 
 %% Calculate total mass of descent stage
 % Get list of each element's length ("Ls") using provided function ElementLengths
-
 % Calculate total mass of descent stage (each element mass = rho*A*L of that element)
 
+Ls = ElementLengths(n_xyz,e_n,Ne)
+element_mass = rho*A*Ls;
+total_mass = sum(element_mass, 'all')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Orbital Mechanics
@@ -75,26 +83,29 @@ n_des_fuel = xlsread(Filename,2,[ 'L3:L',num2str(2+Nn) ])'; % Nodes of point mas
 
 %% Calculate Velocity of LLO
 
+V = Orbital_Velocity(M_Moon, R_Moon+ alt_LLO)
 
 %% Ascent Phase
 % Calculate the fuel required in ascent module (command window printout optional)
 
-Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
+[Delta_V,V_final] = Manoeuvre(0, R_Moon, R_Moon+ alt_LLO ,M_Moon,'Ascent',plot_or_not)
+Delta_m = Rocket_Eqn(m_Ascent_Module_Dry , Delta_V, I_sp)
 
 % Add descent module mass before continuing since ascent module leaves descent module on surface
-
-Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
 
 %% Descent Phase
 % Calculate fuel required in descent module (command window printout optional)
 
-Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
+[Delta_V,V_final] = Manoeuvre(V, R_Moon+ alt_LLO, R_Moon,M_Moon,'Descent',plot_or_not)
+Delta_m = Rocket_Eqn(m_Ascent_Module_Dry + total_mass , Delta_V, I_sp)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Static FEA - Load Case 1: Launch
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Modify point masses for the launch phase (full of fuel)
+
+point_ms = n_asc_mass + n_des_fuel;
 
 % Read BCs and Loads for this load case:
 Phase = 'Launch';
@@ -103,7 +114,13 @@ Loads   = xlsread(Filename,3, ['C4:E' num2str(3*Nn+3)] );
 
 % Perform static FEA for this load case using RunFEA
 
+[U, Strain, Stress] = RunFEA('Launch' , Nn, Ne, n_xyz, e_n, rhos, As, Es, point_ms, BCs, Loads, a_Launch)
+
 % Draw static FEA stress results for this load case using PostProcessFEA (only if plot_or_not==1)
+
+if plot_or_not == 1
+    PostProcessFEA(n_xyz, e_n, As, point_ms, Ne, Nn, U, Strain, Stress, ScaleFactor, CaseName, t, FrameSkip, z_surface)
+end
 
 fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_stress_Launch/1e6, A);
 
@@ -113,6 +130,8 @@ fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_
 
 % Modify point masses for the landed phase (descent stage empty, ascent stage full)
 
+point_ms = n_asc_mass;
+
 % Read BCs and Loads for this load case:
 Phase = 'Landed';
 BCs     = xlsread(Filename,4, ['A4:B' num2str(3*Nn+3)] );
@@ -120,8 +139,13 @@ Loads   = xlsread(Filename,4, ['C4:E' num2str(3*Nn+3)] );
 
 % Perform static FEA for this load case using RunFEA
 
+[U, Strain, Stress] = RunFEA('Landed' , Nn, Ne, n_xyz, e_n, rhos, As, Es, point_ms, BCs, Loads, g_Moon)
+
 % Draw static FEA stress results for this load case using PostProcessFEA (only if plot_or_not==1)
 
+if plot_or_not == 1
+    PostProcessFEA(n_xyz, e_n, As, point_ms, Ne, Nn, U, Strain, Stress, ScaleFactor, CaseName, t, FrameSkip, z_surface)
+end
 fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_stress_Landed/1e6, A);
 
 % Calculate output "peak_stress", which is maximum of peak stress of all load cases
