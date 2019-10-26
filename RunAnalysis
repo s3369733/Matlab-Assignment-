@@ -1,0 +1,130 @@
+function [peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% RunAnalysis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function analyses the orbital motion and static structural response
+% of a lunar lander, outputting peak stress over all load cases and the mass
+% of fuel required in the descent module. Specifically it does the following:
+
+% 1 - Reads parameters of a truss model from the excel file named by the Filename input
+% 2 - If plot_or_not is true, draws the truss model using DrawModel
+% 3 - Calculates the total dry mass using ElementLengths
+% 4 - Calculates fuel required for the ascent phase of the mission
+% 5 - Calculates fuel required for the descent phase of the mission
+% 6 - Performs static FEA for the LAUNCH load case using RunFEA (with fuel mass and ascent module mass included)
+% 7 - If plot_or_not is true, draws the stress results on the truss model for the LAUNCH load case using PostProcessFEA
+% 8 - Performs static FEA for the LANDED load case using RunFEA (with fuel mass and ascent module mass included)
+% 9 - If plot_or_not is true, draws the stress results on the truss model for the LANDED load case using PostProcessFEA
+% 10- Saves the highest peak stress over the two load cases to peak_stress
+
+% Inputs:
+    % Filename:     Name of excel file to read truss model parameters from
+    % A:            Cross-Sectional Area to apply to all elements (m^2)
+    % E:            Young's Modulus to apply to all elements (Pa)
+    % rho:          Density to apply to all elements (kg/m^3)
+    % plot_or_not:  Input 1 to performing steps 7 and 9, input 0 to not
+
+% Outputs: 
+    % peak_stress:              Maximum absolute stress over all elements and load cases
+    % m_Descent_Module_Fuel:    Mass of fuel required in descent module
+
+
+%% ########## THE BELOW SECTION IS PROVIDED, DO NOT EDIT ##########
+
+% Define Fixed Parameters:
+M_Moon = 7.348e22;            % Mass of the moon (kg)
+R_Moon = 1.737e6;             % radius of the moon (m)
+m_Ascent_Module_Dry = 3000;   % Dry mass of ascent stage (kg)
+a_Launch = 40;                % Acceleration during launch phase (m/s^2)
+g_Moon = 1.62;                % Acceleration due to gravity on the Moon's surface (m/s^2)
+
+% Read Variable Parameters from sheet 1 of excel file:
+parameters = xlsread(Filename,1,'C3:C6');
+alt_LLO     = parameters(1); % Altitude of LLO above Moon Surface (m) (based on student numbers?)
+I_sp        = parameters(2); % Specific Impulse (s) (based on your choice of rocket engine)
+Nn          = parameters(3); % Number of nodes in FE Model
+Ne          = parameters(4); % Number of elements in FE Model
+
+% Read FEA Model Definition from sheet 2 of excel file:
+n_xyz = xlsread(Filename,2,[ 'B4:D',num2str(3+Nn) ])'; % Nodal Coordinates (m)
+e_n   = xlsread(Filename,2,[ 'F4:H',num2str(3+Ne) ])'; % Element Connectivity
+n_asc_mass = xlsread(Filename,2,[ 'K3:K',num2str(2+Nn) ])'; % Nodes of point masses representing total ascent module mass
+n_des_fuel = xlsread(Filename,2,[ 'L3:L',num2str(2+Nn) ])'; % Nodes of point masses representing descent module fuel mass
+
+%% ########## THE ABOVE SECTION IS PROVIDED, DO NOT EDIT ##########
+
+%% Create lists of element properties from constant input properties (required for inputs to DrawModel & RunFEA)
+% List of each element's Young's Modulus, "Es" from "E"
+% List of each element's cross-sectional area, "As" from "A"
+% List of each element's input density, "rhos" from "rho"
+
+%% Draw model of descent stage with no fuel (only if plot_or_not==1)
+% (no fuel and no dry point masses so "point_ms" input is an array of zeros)
+
+
+%% Calculate total mass of descent stage
+% Get list of each element's length ("Ls") using provided function ElementLengths
+
+% Calculate total mass of descent stage (each element mass = rho*A*L of that element)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Orbital Mechanics
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Calculate Velocity of LLO
+
+
+%% Ascent Phase
+% Calculate the fuel required in ascent module (command window printout optional)
+
+Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
+
+% Add descent module mass before continuing since ascent module leaves descent module on surface
+
+Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
+
+%% Descent Phase
+% Calculate fuel required in descent module (command window printout optional)
+
+Delta_m = Rocket_Eqn(m_f, Delta_V, I_sp)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Static FEA - Load Case 1: Launch
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Modify point masses for the launch phase (full of fuel)
+
+% Read BCs and Loads for this load case:
+Phase = 'Launch';
+BCs     = xlsread(Filename,3, ['A4:B' num2str(3*Nn+3)] );
+Loads   = xlsread(Filename,3, ['C4:E' num2str(3*Nn+3)] );
+
+% Perform static FEA for this load case using RunFEA
+
+% Draw static FEA stress results for this load case using PostProcessFEA (only if plot_or_not==1)
+
+fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_stress_Launch/1e6, A);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Static FEA - Load Case 2: Landed
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Modify point masses for the landed phase (descent stage empty, ascent stage full)
+
+% Read BCs and Loads for this load case:
+Phase = 'Landed';
+BCs     = xlsread(Filename,4, ['A4:B' num2str(3*Nn+3)] );
+Loads   = xlsread(Filename,4, ['C4:E' num2str(3*Nn+3)] );
+
+% Perform static FEA for this load case using RunFEA
+
+% Draw static FEA stress results for this load case using PostProcessFEA (only if plot_or_not==1)
+
+fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_stress_Landed/1e6, A);
+
+% Calculate output "peak_stress", which is maximum of peak stress of all load cases
+
+
+end
