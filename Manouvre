@@ -33,12 +33,15 @@ V_final = 2*pi*a*sqrt(2*a/R_f-1)/period; % Final transfer velocity
 
 %% Plot initial orbit and the Moon's surface
 if plot_or_not == 1
-    Fig
+    figure
     theta = linspace(0,2*pi,100);
-    polarplot(theta,R_0,theta,R_f)
-    hold on
 %% Define and plot transfer orbit
-    
+    e = (R_0-R_f)./(R_0+R_f); % Eccentricity
+    R_theta = (R_0+R_f).*(1-e^2)./(2*(1-e*cos(theta))); % Radius during transfer orbit
+    polarplot(theta,R_0+theta*0,theta,R_f+theta*0,theta,R_theta) %probably needs linspace(R,R,100)
+    title(Phase)
+    legend('Initial Orbit','Final orbit', 'Transfer orbit')
+end
     
 
 
