@@ -56,17 +56,18 @@ n_des_fuel = xlsread(Filename,2,[ 'L3:L',num2str(2+Nn) ])'; % Nodes of point mas
 
 %% Create lists of element properties from constant input properties (required for inputs to DrawModel & RunFEA)
 % List of each element's Young's Modulus, "Es" from "E"
-Es = linspace(E,E,8);
+Es = linspace(E,E,Ne);
 % List of each element's cross-sectional area, "As" from "A"
-As = linspace(E,E,8);
+As = linspace(A,A,Ne);
 % List of each element's input density, "rhos" from "rho"
-rhos = linspace(E,E,8);
+rhos = linspace(rho,rho,Ne);
 
 %% Draw model of descent stage with no fuel (only if plot_or_not==1)
 % (no fuel and no dry point masses so "point_ms" input is an array of zeros)
+point_ms = zeros(1,Nn);
 
 if plot_or_not==1
-    DrawModel(n_xyz, e_n, As, point_ms,Ne, Nn, Title)
+    DrawModel(n_xyz, e_n, As, point_ms,Ne, Nn, 'Descent stage structure')
 end
 
 %% Calculate total mass of descent stage
@@ -97,7 +98,7 @@ Delta_m = Rocket_Eqn(m_Ascent_Module_Dry , Delta_V, I_sp)
 % Calculate fuel required in descent module (command window printout optional)
 
 [Delta_V,V_final] = Manoeuvre(V, R_Moon+ alt_LLO, R_Moon,M_Moon,'Descent',plot_or_not)
-Delta_m = Rocket_Eqn(m_Ascent_Module_Dry + total_mass , Delta_V, I_sp)
+m_Descent_Module_Fuel = Rocket_Eqn(m_Ascent_Module_Dry + total_mass , Delta_V, I_sp)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Static FEA - Load Case 1: Launch
@@ -105,7 +106,7 @@ Delta_m = Rocket_Eqn(m_Ascent_Module_Dry + total_mass , Delta_V, I_sp)
 
 % Modify point masses for the launch phase (full of fuel)
 
-point_ms = n_asc_mass + n_des_fuel;
+point_ms = linspace(n_asc_mass+n_des_fuel, n_asc_mass+n_des_fuel, Nn); % Ascent fuel needed???????????????????
 
 % Read BCs and Loads for this load case:
 Phase = 'Launch';
@@ -115,13 +116,13 @@ Loads   = xlsread(Filename,3, ['C4:E' num2str(3*Nn+3)] );
 % Perform static FEA for this load case using RunFEA
 
 [U, Strain, Stress] = RunFEA('Launch' , Nn, Ne, n_xyz, e_n, rhos, As, Es, point_ms, BCs, Loads, a_Launch)
-
+Stress
 % Draw static FEA stress results for this load case using PostProcessFEA (only if plot_or_not==1)
 
 if plot_or_not == 1
-    PostProcessFEA(n_xyz, e_n, As, point_ms, Ne, Nn, U, Strain, Stress, ScaleFactor, CaseName, t, FrameSkip, z_surface)
+    PostProcessFEA(n_xyz, e_n, As, point_ms, Ne, Nn, U, Strain, Stress, 1, 'Launch', 1, 1, 1)
 end
-
+peak_stress_Launch = max(abs(Stress)); % Finds peak absolute stress 
 fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_stress_Launch/1e6, A);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -130,7 +131,7 @@ fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_
 
 % Modify point masses for the landed phase (descent stage empty, ascent stage full)
 
-point_ms = n_asc_mass;
+point_ms = linspace(n_asc_mass, n_asc_mass, Nn); % Ascent fuel needed?????????????????????????????????
 
 % Read BCs and Loads for this load case:
 Phase = 'Landed';
@@ -138,17 +139,20 @@ BCs     = xlsread(Filename,4, ['A4:B' num2str(3*Nn+3)] );
 Loads   = xlsread(Filename,4, ['C4:E' num2str(3*Nn+3)] );
 
 % Perform static FEA for this load case using RunFEA
-
-[U, Strain, Stress] = RunFEA('Landed' , Nn, Ne, n_xyz, e_n, rhos, As, Es, point_ms, BCs, Loads, g_Moon)
+if plot_or_not == 1
+    DrawModel(n_xyz, e_n, As, point_ms,Ne, Nn, 'Landed')
+end
+[U, Strain, Stress] = RunFEA('Landed' , Nn, Ne, n_xyz, e_n, rhos, As, Es, point_ms, BCs, Loads, g_Moon);
 
 % Draw static FEA stress results for this load case using PostProcessFEA (only if plot_or_not==1)
 
 if plot_or_not == 1
-    PostProcessFEA(n_xyz, e_n, As, point_ms, Ne, Nn, U, Strain, Stress, ScaleFactor, CaseName, t, FrameSkip, z_surface)
+    PostProcessFEA(n_xyz, e_n, As, point_ms, Ne, Nn, U, Strain, Stress, 1, 'Landed', 1, 1, 1)
 end
+peak_stress_Landed = max(abs(Stress)); % Finds peak absolute stress 
 fprintf('Peak Abs Stress is %i MPa at Cross-Sectional Area of %3f m^2 \n', peak_stress_Landed/1e6, A);
 
 % Calculate output "peak_stress", which is maximum of peak stress of all load cases
 
-
+peak_stress = max([peak_stress_Landed peak_stress_Launch]);
 end
