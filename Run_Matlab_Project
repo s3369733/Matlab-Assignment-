@@ -1,14 +1,14 @@
 %% AERO2463 Computational Engineering Analysis - Project Main Script
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Date:     
+% Date: 27/10/2019    
 % Version:  
 % -------------- Student 1 --------------
 % Name: David Tennent     
 % ID: s3562932             
 % -------------- Student 2 --------------
-% Name:     
-% ID:       
+% Name: Finn Sutherland    
+% ID: s3369733      
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Reset Workspace:
@@ -18,26 +18,27 @@ clear; close all; clc
 Filename = 'S3562932_S3369733_Design_File';
 
 %% Material Properties
-rho  = 2810;           % Element Material Density (kg/m^3)
-E    = 7.17E+10;           % Element Material Young's Modulus (N/m^2)
-failure_strength = ; % Element Material Yield/Ultimate/Failure Strength (N/m^2)
+rho  = 4506;%1700;%           % Element Material Density (kg/m^3)
+E    = 114E+9; %228e+9;%          % Element Material Young's Modulus (N/m^2)
+failure_strength = 434e+6; %1200e+6;% Element Material Yield/Ultimate/Failure Strength (N/m^2)
 
 %% Parameters
-Amin = 0.001; % Minimum cross-sectional area to test (m^2)
+Amin = 0.0005; % Minimum cross-sectional area to test (m^2)
 Amax = 0.005; % Maximum cross-sectional area to test (m^2)
 nA = 10; % number of cross-sectional areas to check
 n = 8; % Order of polynomial to fit to coarse data
 safety_factor = 2; % Factor by which to divide yield strength to have maximum allowable stress
 stress_allowed = failure_strength / safety_factor;
-tolerance = ; % Convergence tolerance for bisection method, in units of stress (Pa)
-maxiter = ;    % Maximum number of iterations for bisection method
+tolerance = 1e-5; % Convergence tolerance for bisection method, in units of stress (Pa)
+maxiter = 100;    % Maximum number of iterations for bisection method
 
 %% Activity 1 & 2: Call RunAnalysis for some input Area to test it and draw your truss structure
 % (set plot_or_not to 1 to see your truss model and debug, via RunAnalysis calling DrawModel)
+A = 0.002; % This shouldn't be here
 
-plot_or_not == 1;
-[peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not)
-plot_or_not == 0; 
+plot_or_not = 1;
+
+[peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not);
 
 % (set plot_or_not to 0 before you submit)
 
@@ -47,18 +48,24 @@ plot_or_not == 0;
 
 % For each Cross-Sectional Area, call RunAnalysis
 
-for A = linspace(Amin,Amax
-    [peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, A, E, rho, plot_or_not)
-    figure 
-    hold on
-    plot(A, peak_stress, 'b')
-    plot(max_allowable_stress, 'r')
-    title('Area vs. Peak Stress')
-    
-    figure
-    plot(A, m_Descent_Module_Fuel, 'b') 
+plot_or_not = 0;
+
+A = linspace(Amin,Amax,nA);
+
+for i = [1:1:nA]
+    [peak_stress(i),m_Descent_Module_Fuel(i)] = RunAnalysis(Filename, A(i), E, rho, plot_or_not);
 end
+
+figure(7)
+hold on
+plot(A,peak_stress,'ob')
+plot(A,stress_allowed*A./A, '-xr')
+title('Area vs. Peak Stress')
  
+figure(8)
+title('Area vs. Descent Module Fuel mass')
+plot(A, m_Descent_Module_Fuel, 'ob')
+
 % Plot data points on Area versus peak stress plot (figure 1)
 % Plot red horizontal line at max_allowable_stress (figure 1)
 % Plot data points on Area versus descent module fuel mass plot (figure 2)
@@ -66,44 +73,60 @@ end
 %% Activity 4:  Create polynomial fit of coarse peak stress vs. Area data
 % Check that order of polynomial to fit is below number of data points
 
-if length(A)<n+1
+if nA<n+1
     error('Error: the order of polynomial to fit is below the number of data points, pleaase re-enter values');
 end
 
 % Fit polynomial to data, getting list of coefficients
 % Plot polynomial fit on figure 1
 
-for i=1:1:count
-    if abs (poly(1)) > tolerance
-        poly = polyfit(A,peak_stress,i)
-        interp_x2=polyval(poly,x2);
-        plot(i, interp_x2, 'bo')
-        figure
-        hold on
-        plot(x,y,'bo')
-
-    end
-end
+poly = polyfit(A,peak_stress,n);
+figure(7)
+title('Polyfit - Area vs. Peak Stress')        
+hold on
+%plot(A,peak_stress,'ob')
+plot(A,polyval(poly,A,'r-'))
+        
+        
 
 %% Activity 5: Use bisection method to find root of a function g = polyval() - stress_allowed
 % Define function g whose root is the intersection of peak stress and max allowable stress 
+syms g
+%fun = @fun (poly2sym(poly,g)-stress_allowed)
+% carbon fun = @(g) 416574186869603010887307569360011264.*g.^8 - 2053020163731144722703822901739520.*g.^7 + 4329921107021812786173115891712.*g.^6 - 5106358362988035076339531776.*g.^5 + 3691114393185035040587776.*g.^4 - 1684915684101158076416.*g.^3 + 481776944075089280.*g.^2 - (5270116358953379.*g)./64 + 3632332952303795/524288;
+% Ti
+fun = @(g) 416574186869598140946872110038384640.*g.^8 - 2053020163731135211101409895251968.*g.^7 + 4329921107021806030773674835968.*g.^6 - 5106358362988035076339531776.*g.^5 + 3691114393185038798684160.*g.^4 - 1684915684101160697856.*g.^3 + 481776944075089920.*g.^2 - (5270116358953385.*g)./64 + 7666484756755747/1048576;
 
-fun = @(g) 
 % Calculate initial lower limit for bisection (largest area with peak stress > allowable stress)
-
+b = A(find(peak_stress<stress_allowed,1));
+a = A(find(stress_allowed<peak_stress,1,'last'));
+%while peak_stress(i)>stress_allowed
 % Plot vertical line at initial lower limit
 % Calculate initial upper limit for bisection (smallest area with peak stress < allowable stress)
 % Plot vertical line at initial upper limit
 
 % Call Bisection function to perform bisection method on g, getting list of (x,y) points at each iteration of the process
 
-[x_list,y_list] = Bisection(fun, a, b, maxiter, tolerance)
+[x_list,y_list] = Bisection(fun, a, b, maxiter, tolerance);
 
 % Plot optimal point found by bisection (x = A_opt, y = peak stress at A_opt according to fitted polynomial)
+figure(10)
+hold on
+title('Fine Search')
+plot(x_list, y_list,'ob')
 
 % Call RunAnalysis for A_opt, getting exact peak stress at A_opt, "peak_stress_opt" (plot_or_not==1)
+plot_or_not = 1;
+[peak_stress,m_Descent_Module_Fuel] = RunAnalysis(Filename, x_list(end), E, rho, plot_or_not);
 
 % Plot this exact optimal point as a green x on descent module fuel mass vs area plot (figure 2)
 
+figure(8)
+hold on
+plot(x_list(end),m_Descent_Module_Fuel,'gx')
+
 % Plot this exact optimal point as a green x on bisection stress vs area plot (figure 3)
 
+figure(10)
+hold on
+plot(x_list(end),m_Descent_Module_Fuel,'gx')
