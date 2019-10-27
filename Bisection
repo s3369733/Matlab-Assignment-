@@ -31,30 +31,22 @@ end
 
 while (tolerance<0)
     fprintf('Invalid selection for tolerance, please enter a positive value'); 
-
+end
 
 %% Main bisection algorithm loop
 
-s=(a+b)/2
+x_list=(a+b)/2;
 n=1;
 while abs(b-a)>tolerance
     if (fun(a)*fun(b)<0)
-        b=s;
+        b=x_list(n);
     else 
-        a=s;
+        a=x_list(n);
     end
     
 n=n+1;
-s=(a+b)/2;
+x_list(n+1)=(a+b)/2;
+
 end
-
-
-        
-
-
-
-
-
-
-
-
+y_list = fun(x_list);
+end
