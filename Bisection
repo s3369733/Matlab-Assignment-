@@ -19,10 +19,6 @@ function [x_list,y_list] = Bisection(fun, a, b, maxiter, tolerance)
 %% Check inputs 
 % Do a and b bracket a root and are not themselves roots?
 
-while ((fun(a)*fun(b))>0)
-    fprintf('\n Invalid selection of a and b. Please try again. \n\n');
-end
-
 % Are maxiter and tolerance positive?
 
 while (maxiter<0)
@@ -31,30 +27,22 @@ end
 
 while (tolerance<0)
     fprintf('Invalid selection for tolerance, please enter a positive value'); 
-
+end
 
 %% Main bisection algorithm loop
 
-s=(a+b)/2
+x_list=(a+b)/2;
 n=1;
 while abs(b-a)>tolerance
     if (fun(a)*fun(b)<0)
-        b=s;
+        b=x_list(n);
     else 
-        a=s;
+        a=x_list(n);
     end
     
 n=n+1;
-s=(a+b)/2;
+x_list(n+1)=(a+b)/2;
+
 end
-
-
-        
-
-
-
-
-
-
-
-
+y_list = fun(x_list);
+end
