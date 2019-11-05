@@ -19,7 +19,7 @@ g = 9.81; % Earth Surface Gravity in m/s^2 (used as constant for calculating I_s
 
 %% Calculate change in fuel mass for this manoevre
 
-m_r = m_f*(1-exp(-(Delta_V/I_sp*g)));
+Delta_m = m_f*(1-exp(-(Delta_V/I_sp*g)));
 
 
 end
