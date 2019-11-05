@@ -1,0 +1,23 @@
+function V = Orbital_Velocity(M_Central,R)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Orbital_Velocity
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This function calculates orbital velocity for a circular orbit at a given 
+% radius from the center of a planetary body.
+
+% Inputs:
+    % M_Central: Mass of the planetary body (kg)
+    % R: 		 Radius of orbit from center of the body (m)
+
+% Outputs:
+    % V: 		 Orbital Velocity (m/s)
+
+% Constants:
+G  = 6.67e-11; % Universal Gravitational Constant
+
+%% Calculate Orbital Velocity
+
+V = sqrt(G*M_Central/R);
+
+end
